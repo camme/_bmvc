@@ -19,7 +19,7 @@ var _bmvc =
 	(function(){
 		
 		// create a local reference;
-		var _bmvc = new function(){ this.name = "_bmvc"; }();
+		var _bmvc = new (function(){ this.name = "_bmvc"; })();
 		
 		// generel function for singletons
 		var getInstance = function()
@@ -305,6 +305,7 @@ var _bmvc =
 				// if we find listeners, loop trough them and send the event to the listening objects
 				if (listeners)
 				{
+					console.log("Nr of listeners for event '" + eventName + "'", listeners.length)
 					for(var i = 0, ii = listeners.length; i < ii; i++)
 					{
 						var listeningObject = listeners[i].listeningObject;
@@ -326,6 +327,33 @@ var _bmvc =
 				}
 			}
 			
+		}
+		
+		// creates events easely
+		_bmvc.defineEvent = function(eventName, args, properties)
+		{
+			var nsName = eventName.substring(0, eventName.lastIndexOf("."));
+			var eventLastName = eventName.replace(nsName, "").replace(".", "")
+
+			var ns = _bmvc.addNamespace(nsName);
+			
+			ns[eventLastName] = function()
+			{
+				this.name = eventName;
+				for(var i = 0, ii = args.length; i < ii; i++)
+				{
+					if (arguments[i])
+					{
+						this[args[i]] = arguments[i];					
+					}
+					else
+					{
+						this[args[i]] = null;
+					}
+				}
+			}
+
+			ns[eventLastName].prototype = properties;
 		}
 		 
 		// method to add namespaces
@@ -505,7 +533,14 @@ var _bmvc =
 			}
 		}
 		
-		init();
+		if (isBrowser)
+		{
+			init();
+		}
+		else
+		{
+			_bmvc.init = init;
+		}
 		
 		return _bmvc;
 		
